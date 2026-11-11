@@ -7,3 +7,7 @@ export const createFormInputSchema = z.object({
 });
 
 export type CreateFormInputSchemaType = z.infer<typeof createFormInputSchema>;
+
+export const listFormsByUserIdInputSchema = z.uuid().describe("UUID of the user to list forms for");
+
+export type ListFormsByUserIdInputSchemaType = z.infer<typeof listFormsByUserIdInputSchema>;
