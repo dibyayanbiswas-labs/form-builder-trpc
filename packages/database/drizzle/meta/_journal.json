@@ -22,6 +22,13 @@
       "when": 1794379968080,
       "tag": "0002_good_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794380843504,
+      "tag": "0003_wakeful_ken_ellis",
+      "breakpoints": true
     }
   ]
 }
