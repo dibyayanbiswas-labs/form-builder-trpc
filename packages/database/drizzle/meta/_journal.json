@@ -15,6 +15,13 @@
       "when": 1791911371051,
       "tag": "0001_melodic_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794379968080,
+      "tag": "0002_good_cloak",
+      "breakpoints": true
     }
   ]
 }
