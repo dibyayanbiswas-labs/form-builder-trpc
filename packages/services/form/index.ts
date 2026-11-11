@@ -7,12 +7,14 @@ import {
   createFormInputSchema,
   deleteFieldInputSchema,
   getFieldInputSchema,
+  listFieldsByFormIdInputSchema,
   listFormsByUserIdInputSchema,
   updateFieldInputSchema,
   type CreateFieldInputSchemaType,
   type CreateFormInputSchemaType,
   type DeleteFieldInputSchemaType,
   type GetFieldInputSchemaType,
+  type ListFieldsByFormIdInputSchemaType,
   type ListFormsByUserIdInputSchemaType,
   type UpdateFieldInputSchemaType,
 } from "./model";
@@ -157,6 +159,24 @@ class FormService {
     }
 
     return { id: deletedField.id };
+  }
+
+  public async listFieldsByFormId(formId: ListFieldsByFormIdInputSchemaType, userId: string) {
+    const validatedFormId = await listFieldsByFormIdInputSchema.parseAsync(formId);
+    const [ownedForm] = await db
+      .select({ id: formsTable.id })
+      .from(formsTable)
+      .where(and(eq(formsTable.id, validatedFormId), eq(formsTable.createdBy, userId)));
+
+    if (!ownedForm) {
+      throw new Error(`Form with id ${validatedFormId} does not exist`);
+    }
+
+    return db
+      .select()
+      .from(formFieldsTable)
+      .where(eq(formFieldsTable.formId, validatedFormId))
+      .orderBy(sql`${formFieldsTable.index} ASC`);
   }
 }
 

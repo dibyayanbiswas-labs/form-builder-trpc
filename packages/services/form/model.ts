@@ -69,3 +69,7 @@ export type GetFieldInputSchemaType = z.infer<typeof getFieldInputSchema>;
 export const deleteFieldInputSchema = z.uuid().describe("ID of the field to delete");
 
 export type DeleteFieldInputSchemaType = z.infer<typeof deleteFieldInputSchema>;
+
+export const listFieldsByFormIdInputSchema = z.uuid();
+
+export type ListFieldsByFormIdInputSchemaType = z.infer<typeof listFieldsByFormIdInputSchema>;

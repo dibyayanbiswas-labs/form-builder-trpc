@@ -84,3 +84,9 @@ export const createFieldOutputModel = z.object({
 });
 
 export const deleteFieldOutputModel = createFieldOutputModel;
+
+export const listFieldsInputModel = z.object({
+  formId: z.string().uuid(),
+});
+
+export const listFieldsOutputModel = z.array(formFieldOutputModel);

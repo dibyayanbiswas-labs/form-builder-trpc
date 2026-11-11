@@ -12,6 +12,8 @@ import {
   getFieldInputModel,
   listFormsInputModel,
   listFormsOutputModel,
+  listFieldsInputModel,
+  listFieldsOutputModel,
   updateFieldInputModel,
 } from "./model";
 
@@ -126,4 +128,24 @@ export const formRouter = router({
     .input(deleteFieldInputModel)
     .output(deleteFieldOutputModel)
     .mutation(async ({ input, ctx }) => formService.deleteField(input.id, ctx.user.id)),
+
+  listFields: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/{formId}/fields"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(listFieldsInputModel)
+    .output(listFieldsOutputModel)
+    .query(async ({ input, ctx }) => {
+      const fields = await formService.listFieldsByFormId(input.formId, ctx.user.id);
+      return fields.map((field) => ({
+        ...field,
+        createdAt: field.createdAt?.toISOString() ?? null,
+        updatedAt: field.updatedAt?.toISOString() ?? null,
+      }));
+    }),
 });
