@@ -1,4 +1,4 @@
-import { db, eq, sql } from "@repo/database";
+import { and, db, eq, sql } from "@repo/database";
 import { formsTable } from "@repo/database/models/form";
 import { formFieldsTable } from "@repo/database/models/form-field";
 
@@ -48,6 +48,20 @@ class FormService {
       .where(eq(formsTable.createdBy, validatedUserId));
   }
 
+  private async getOwnedField(id: string, userId: string) {
+    const [result] = await db
+      .select({ field: formFieldsTable })
+      .from(formFieldsTable)
+      .innerJoin(formsTable, eq(formFieldsTable.formId, formsTable.id))
+      .where(and(eq(formFieldsTable.id, id), eq(formsTable.createdBy, userId)));
+
+    if (!result) {
+      throw new Error(`Form field with id ${id} does not exist`);
+    }
+
+    return result.field;
+  }
+
   private async getNextIndex(formId: string) {
     const [result] = await db
       .select({
@@ -63,8 +77,17 @@ class FormService {
     return result.index;
   }
 
-  public async createField(payload: CreateFieldInputSchemaType) {
+  public async createField(payload: CreateFieldInputSchemaType, userId: string) {
     const field = await createFieldInputSchema.parseAsync(payload);
+    const [ownedForm] = await db
+      .select({ id: formsTable.id })
+      .from(formsTable)
+      .where(and(eq(formsTable.id, field.formId), eq(formsTable.createdBy, userId)));
+
+    if (!ownedForm) {
+      throw new Error(`Form with id ${field.formId} does not exist`);
+    }
+
     const labelKey = field.label
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -87,12 +110,24 @@ class FormService {
     return { id: createdField.id };
   }
 
-  public async updateField(payload: UpdateFieldInputSchemaType) {
+  public async updateField(payload: UpdateFieldInputSchemaType, userId: string) {
     const { id, ...updates } = await updateFieldInputSchema.parseAsync(payload);
+    await this.getOwnedField(id, userId);
+    const updateData =
+      updates.label !== undefined
+        ? {
+            ...updates,
+            labelKey:
+              updates.label
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "") || "field",
+          }
+        : updates;
 
     const [updatedField] = await db
       .update(formFieldsTable)
-      .set(updates)
+      .set(updateData)
       .where(eq(formFieldsTable.id, id))
       .returning();
 
@@ -103,22 +138,15 @@ class FormService {
     return updatedField;
   }
 
-  public async getField(id: GetFieldInputSchemaType) {
+  public async getField(id: GetFieldInputSchemaType, userId: string) {
     const validatedId = await getFieldInputSchema.parseAsync(id);
-    const [field] = await db
-      .select()
-      .from(formFieldsTable)
-      .where(eq(formFieldsTable.id, validatedId));
-
-    if (!field) {
-      throw new Error(`Form field with id ${validatedId} does not exist`);
-    }
-
-    return field;
+    return this.getOwnedField(validatedId, userId);
   }
 
-  public async deleteField(id: DeleteFieldInputSchemaType) {
+  public async deleteField(id: DeleteFieldInputSchemaType, userId: string) {
     const validatedId = await deleteFieldInputSchema.parseAsync(id);
+    await this.getOwnedField(validatedId, userId);
+
     const [deletedField] = await db
       .delete(formFieldsTable)
       .where(eq(formFieldsTable.id, validatedId))

@@ -2,10 +2,17 @@ import { formService } from "../../services";
 import { authenticatedProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import {
+  createFieldInputModel,
+  createFieldOutputModel,
   createFormInputModel,
   createFormOutputModel,
+  deleteFieldInputModel,
+  deleteFieldOutputModel,
+  formFieldOutputModel,
+  getFieldInputModel,
   listFormsInputModel,
   listFormsOutputModel,
+  updateFieldInputModel,
 } from "./model";
 
 const getPath = generatePath("/forms");
@@ -53,4 +60,70 @@ export const formRouter = router({
         updatedAt: form.updatedAt?.toISOString() ?? null,
       }));
     }),
+
+  createField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: getPath("/fields"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(createFieldInputModel)
+    .output(createFieldOutputModel)
+    .mutation(async ({ input, ctx }) => formService.createField(input, ctx.user.id)),
+
+  updateField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "PATCH",
+        path: getPath("/fields/{id}"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(updateFieldInputModel)
+    .output(formFieldOutputModel)
+    .mutation(async ({ input, ctx }) => {
+      const field = await formService.updateField(input, ctx.user.id);
+      return {
+        ...field,
+        createdAt: field.createdAt?.toISOString() ?? null,
+        updatedAt: field.updatedAt?.toISOString() ?? null,
+      };
+    }),
+
+  getField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/fields/{id}"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(getFieldInputModel)
+    .output(formFieldOutputModel)
+    .query(async ({ input, ctx }) => {
+      const field = await formService.getField(input.id, ctx.user.id);
+      return {
+        ...field,
+        createdAt: field.createdAt?.toISOString() ?? null,
+        updatedAt: field.updatedAt?.toISOString() ?? null,
+      };
+    }),
+
+  deleteField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "DELETE",
+        path: getPath("/fields/{id}"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(deleteFieldInputModel)
+    .output(deleteFieldOutputModel)
+    .mutation(async ({ input, ctx }) => formService.deleteField(input.id, ctx.user.id)),
 });
