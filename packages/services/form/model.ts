@@ -77,3 +77,12 @@ export type ListFieldsByFormIdInputSchemaType = z.infer<typeof listFieldsByFormI
 export const getFormByIdInputSchema = z.uuid().describe("ID of the form to retrieve");
 
 export type GetFormByIdInputSchemaType = z.infer<typeof getFormByIdInputSchema>;
+
+export const reorderFieldsInputSchema = z
+  .object({
+    formId: z.uuid().describe("ID of the form whose fields should be reordered"),
+    fieldIds: z.array(z.uuid()).min(1).describe("Field IDs in their requested display order"),
+  })
+  .describe("Input for reordering form fields");
+
+export type ReorderFieldsInputSchemaType = z.infer<typeof reorderFieldsInputSchema>;

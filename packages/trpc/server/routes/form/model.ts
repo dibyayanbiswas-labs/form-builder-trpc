@@ -160,3 +160,17 @@ export const getFormSubmissionsOutputModel = z.array(
     updatedAt: z.string().nullable().describe("Timestamp when the submission was last updated"),
   }),
 );
+
+export const reorderFieldsInputModel = z
+  .object({
+    formId: z.string().uuid().describe("ID of the form whose fields should be reordered"),
+    fieldIds: z
+      .array(z.string().uuid())
+      .min(1)
+      .describe("Field IDs in their requested display order"),
+  })
+  .describe("Input for reordering form fields");
+
+export const reorderFieldsOutputModel = z.object({
+  formId: z.string().uuid().describe("ID of the reordered form"),
+});

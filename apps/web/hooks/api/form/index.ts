@@ -309,3 +309,19 @@ export const useGetFormSubmissions = (formId: string) => {
     status,
   };
 };
+
+export const useReorderFields = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutate: reorderFields,
+    mutateAsync: reorderFieldsAsync,
+    error,
+    isPending,
+  } = trpc.form.reorderFields.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return { reorderFields, reorderFieldsAsync, error, isPending };
+};

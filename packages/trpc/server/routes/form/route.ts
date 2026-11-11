@@ -18,6 +18,8 @@ import {
   listFormsOutputModel,
   listFieldsInputModel,
   listFieldsOutputModel,
+  reorderFieldsInputModel,
+  reorderFieldsOutputModel,
   submitFormInputModel,
   submitFormOutputModel,
   updateFieldInputModel,
@@ -204,4 +206,17 @@ export const formRouter = router({
         updatedAt: submission.updatedAt?.toISOString() ?? null,
       }));
     }),
+
+  reorderFields: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "PATCH",
+        path: getPath("/{formId}/fields/order"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(reorderFieldsInputModel)
+    .output(reorderFieldsOutputModel)
+    .mutation(async ({ input, ctx }) => formService.reorderFields(input, ctx.user.id)),
 });

@@ -10,6 +10,7 @@ import {
   getFieldInputSchema,
   listFieldsByFormIdInputSchema,
   listFormsByUserIdInputSchema,
+  reorderFieldsInputSchema,
   updateFieldInputSchema,
   type CreateFieldInputSchemaType,
   type CreateFormInputSchemaType,
@@ -18,6 +19,7 @@ import {
   type GetFieldInputSchemaType,
   type ListFieldsByFormIdInputSchemaType,
   type ListFormsByUserIdInputSchemaType,
+  type ReorderFieldsInputSchemaType,
   type UpdateFieldInputSchemaType,
 } from "./model";
 
@@ -66,52 +68,49 @@ class FormService {
     return result.field;
   }
 
-  private async getNextIndex(formId: string) {
-    const [result] = await db
-      .select({
-        index: sql<string>`COALESCE(MAX(${formFieldsTable.index}) + 1, 1)`,
-      })
-      .from(formFieldsTable)
-      .where(eq(formFieldsTable.formId, formId));
-
-    if (!result) {
-      throw new Error("Could not determine the next form field index");
-    }
-
-    return result.index;
-  }
-
   public async createField(payload: CreateFieldInputSchemaType, userId: string) {
     const field = await createFieldInputSchema.parseAsync(payload);
-    const [ownedForm] = await db
-      .select({ id: formsTable.id })
-      .from(formsTable)
-      .where(and(eq(formsTable.id, field.formId), eq(formsTable.createdBy, userId)));
+    return db.transaction(async (tx) => {
+      const [ownedForm] = await tx
+        .select({ id: formsTable.id })
+        .from(formsTable)
+        .where(and(eq(formsTable.id, field.formId), eq(formsTable.createdBy, userId)))
+        .for("update");
 
-    if (!ownedForm) {
-      throw new Error(`Form with id ${field.formId} does not exist`);
-    }
+      if (!ownedForm) {
+        throw new Error(`Form with id ${field.formId} does not exist`);
+      }
 
-    const labelKey = field.label
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    const index = await this.getNextIndex(field.formId);
+      const labelKey = field.label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const [nextIndex] = await tx
+        .select({
+          index: sql<string>`COALESCE(MAX(${formFieldsTable.index}) + 1, 1)`,
+        })
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, field.formId));
 
-    const [createdField] = await db
-      .insert(formFieldsTable)
-      .values({
-        ...field,
-        labelKey: labelKey || "field",
-        index,
-      })
-      .returning({ id: formFieldsTable.id });
+      if (!nextIndex) {
+        throw new Error("Could not determine the next form field index");
+      }
 
-    if (!createdField) {
-      throw new Error("Something went wrong while creating the form field");
-    }
+      const [createdField] = await tx
+        .insert(formFieldsTable)
+        .values({
+          ...field,
+          labelKey: labelKey || "field",
+          index: nextIndex.index,
+        })
+        .returning({ id: formFieldsTable.id });
 
-    return { id: createdField.id };
+      if (!createdField) {
+        throw new Error("Something went wrong while creating the form field");
+      }
+
+      return { id: createdField.id };
+    });
   }
 
   public async updateField(payload: UpdateFieldInputSchemaType, userId: string) {
@@ -215,6 +214,54 @@ class FormService {
       ...firstRow.form,
       fields: rows.map(({ field }) => field).filter((field) => field !== null),
     };
+  }
+
+  public async reorderFields(payload: ReorderFieldsInputSchemaType, userId: string) {
+    const { formId, fieldIds } = await reorderFieldsInputSchema.parseAsync(payload);
+
+    return db.transaction(async (tx) => {
+      const [ownedForm] = await tx
+        .select({ id: formsTable.id })
+        .from(formsTable)
+        .where(and(eq(formsTable.id, formId), eq(formsTable.createdBy, userId)))
+        .for("update");
+
+      if (!ownedForm) {
+        throw new Error(`Form with id ${formId} does not exist`);
+      }
+
+      const fields = await tx
+        .select({ id: formFieldsTable.id, index: formFieldsTable.index })
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, formId))
+        .for("update");
+      const existingIds = new Set(fields.map(({ id }) => id));
+
+      if (
+        fieldIds.length !== fields.length ||
+        new Set(fieldIds).size !== fieldIds.length ||
+        fieldIds.some((id) => !existingIds.has(id))
+      ) {
+        throw new Error("The requested field order does not match the fields in this form");
+      }
+
+      const minIndex = Math.min(...fields.map(({ index }) => Number(index)));
+      for (const [position, field] of fields.entries()) {
+        await tx
+          .update(formFieldsTable)
+          .set({ index: String(minIndex - fields.length - position - 1) })
+          .where(eq(formFieldsTable.id, field.id));
+      }
+
+      for (const [position, id] of fieldIds.entries()) {
+        await tx
+          .update(formFieldsTable)
+          .set({ index: String(position + 1) })
+          .where(eq(formFieldsTable.id, id));
+      }
+
+      return { formId };
+    });
   }
 }
 
