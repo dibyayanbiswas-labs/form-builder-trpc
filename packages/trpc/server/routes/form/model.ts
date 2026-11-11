@@ -90,3 +90,33 @@ export const listFieldsInputModel = z.object({
 });
 
 export const listFieldsOutputModel = z.array(formFieldOutputModel);
+
+export const getFormByIdInputModel = z
+  .object({
+    id: z.string().uuid().describe("ID of the form to retrieve"),
+  })
+  .describe("Input for retrieving a publicly shareable form");
+
+export const getFormByIdOutputModel = z
+  .object({
+    id: z.string().uuid().describe("ID of the form"),
+    title: z.string().describe("Title of the form"),
+    description: z.string().nullable().describe("Description of the form"),
+    fields: z
+      .array(
+        z
+          .object({
+            id: z.string().uuid().describe("ID of the field"),
+            label: z.string().describe("Visible field label"),
+            labelKey: z.string().describe("Slug generated from the field label"),
+            description: z.string().nullable().describe("Description of the field"),
+            placeholder: z.string().nullable().describe("Placeholder shown for the field"),
+            isRequired: z.boolean().describe("Whether the field is required"),
+            index: z.string().describe("Sort index of the field"),
+            fieldType: fieldTypeModel.describe("Input type rendered for the field"),
+          })
+          .describe("A field included in the form"),
+      )
+      .describe("Fields in the form, ordered by their sort index"),
+  })
+  .describe("Publicly shareable form with its fields");

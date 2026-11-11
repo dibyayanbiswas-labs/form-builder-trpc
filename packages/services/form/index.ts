@@ -6,6 +6,7 @@ import {
   createFieldInputSchema,
   createFormInputSchema,
   deleteFieldInputSchema,
+  getFormByIdInputSchema,
   getFieldInputSchema,
   listFieldsByFormIdInputSchema,
   listFormsByUserIdInputSchema,
@@ -13,6 +14,7 @@ import {
   type CreateFieldInputSchemaType,
   type CreateFormInputSchemaType,
   type DeleteFieldInputSchemaType,
+  type GetFormByIdInputSchemaType,
   type GetFieldInputSchemaType,
   type ListFieldsByFormIdInputSchemaType,
   type ListFormsByUserIdInputSchemaType,
@@ -177,6 +179,42 @@ class FormService {
       .from(formFieldsTable)
       .where(eq(formFieldsTable.formId, validatedFormId))
       .orderBy(sql`${formFieldsTable.index} ASC`);
+  }
+
+  public async getFormById(id: GetFormByIdInputSchemaType) {
+    const formId = await getFormByIdInputSchema.parseAsync(id);
+    const rows = await db
+      .select({
+        form: {
+          id: formsTable.id,
+          title: formsTable.title,
+          description: formsTable.description,
+        },
+        field: {
+          id: formFieldsTable.id,
+          label: formFieldsTable.label,
+          labelKey: formFieldsTable.labelKey,
+          description: formFieldsTable.description,
+          placeholder: formFieldsTable.placeholder,
+          isRequired: formFieldsTable.isRequired,
+          index: formFieldsTable.index,
+          fieldType: formFieldsTable.fieldType,
+        },
+      })
+      .from(formsTable)
+      .leftJoin(formFieldsTable, eq(formFieldsTable.formId, formsTable.id))
+      .where(eq(formsTable.id, formId))
+      .orderBy(sql`${formFieldsTable.index} ASC`);
+    const firstRow = rows[0];
+
+    if (!firstRow) {
+      throw new Error(`Form with id ${formId} does not exist`);
+    }
+
+    return {
+      ...firstRow.form,
+      fields: rows.map(({ field }) => field).filter((field) => field !== null),
+    };
   }
 }
 
