@@ -8,14 +8,25 @@ const getPath = generatePath("/forms");
 export const formRouter = router({
   createForm: authenticatedProcedure
     .meta({
-      openapi: { method: "POST", path: getPath("/"), tags: ["Forms"] },
+        openapi: { 
+            method: "POST", 
+            path: getPath("/"), 
+            tags: ["Forms"],
+            protect: true
+        },
     })
     .input(createFormInputModel)
     .output(createFormOutputModel)
     .mutation(async ({ input, ctx }) => {
-      return formService.createForm({
-        ...input,
+    
+      const { title, description } = input;
+
+      const { id } = await formService.createForm({
+        title,
+        description,
         createdBy: ctx.user.id,
       });
-    }),
+
+      return { id };
+    }), 
 });
