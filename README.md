@@ -1,6 +1,6 @@
-# Streamyst
+# trpc-forms
 
-Streamyst is a web application for creating forms, sharing them with respondents, and reviewing submitted responses. The repository is a pnpm and Turborepo monorepo: the web app, HTTP API, database code, and application services live in separate workspaces.
+trpc-forms is a web application for creating forms, sharing them with respondents, and reviewing submitted responses. The repository is a pnpm and Turborepo monorepo: the web app, HTTP API, database code, and application services live in separate workspaces.
 
 ## What the application does
 
