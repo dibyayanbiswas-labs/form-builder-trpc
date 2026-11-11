@@ -9,20 +9,6 @@ import {
 } from "./model";
 
 class FormService {
-  public async listFormsByUserId(userId: ListFormsByUserIdInputSchemaType) {
-    const validatedUserId = await listFormsByUserIdInputSchema.parseAsync(userId);
-
-    return db
-      .select({
-        id: formsTable.id,
-        title: formsTable.title,
-        description: formsTable.description,
-        createdAt: formsTable.createdAt,
-        updatedAt: formsTable.updatedAt,
-      })
-      .from(formsTable)
-      .where(eq(formsTable.createdBy, validatedUserId));
-  }
 
   public async createForm(payload: CreateFormInputSchemaType) {
     const { title, description, createdBy } = await createFormInputSchema.parseAsync(payload);
@@ -37,6 +23,21 @@ class FormService {
     }
 
     return { id: form.id };
+  }
+  
+  public async listFormsByUserId(userId: ListFormsByUserIdInputSchemaType) {
+    const validatedUserId = await listFormsByUserIdInputSchema.parseAsync(userId);
+
+    return db
+      .select({
+        id: formsTable.id,
+        title: formsTable.title,
+        description: formsTable.description,
+        createdAt: formsTable.createdAt,
+        updatedAt: formsTable.updatedAt,
+      })
+      .from(formsTable)
+      .where(eq(formsTable.createdBy, validatedUserId));
   }
 }
 

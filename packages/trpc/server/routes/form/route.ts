@@ -1,24 +1,29 @@
 import { formService } from "../../services";
 import { authenticatedProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
-import { createFormInputModel, createFormOutputModel } from "./model";
+import {
+  createFormInputModel,
+  createFormOutputModel,
+  listFormsInputModel,
+  listFormsOutputModel,
+} from "./model";
 
 const getPath = generatePath("/forms");
 
 export const formRouter = router({
+
   createForm: authenticatedProcedure
     .meta({
-        openapi: { 
-            method: "POST", 
-            path: getPath("/"), 
-            tags: ["Forms"],
-            protect: true
-        },
+      openapi: {
+        method: "POST",
+        path: getPath("/"),
+        tags: ["Forms"],
+        protect: true,
+      },
     })
     .input(createFormInputModel)
     .output(createFormOutputModel)
     .mutation(async ({ input, ctx }) => {
-    
       const { title, description } = input;
 
       const { id } = await formService.createForm({
@@ -28,5 +33,22 @@ export const formRouter = router({
       });
 
       return { id };
-    }), 
+    }),
+
+
+    listForms: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(listFormsInputModel)
+    .output(listFormsOutputModel)
+    .query(async ({ ctx }) => {
+        const forms = await formService.listFormsByUserId(ctx.user.id); 
+        return forms;
+    }),
 });
