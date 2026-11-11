@@ -1,8 +1,7 @@
 import { z, zodUndefinedModel } from "../../schema";
 import { userService } from "../../services";
-// import { getAuthenticationMethodOutputSchema } from "@repo/services/user/model";
-import { publicProcedure, router } from "../../trpc";
-import { getAuthenticationCookie, setAuthenticationCookie } from "../../utils/cookie";
+import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
+import { setAuthenticationCookie } from "../../utils/cookie";
 import { generatePath } from "../../utils/path-generator";
 import { createUserWithEmailAndPasswordInputModel, createUserWithEmailAndPasswordOutputModel, getLoggedInUserInfoInput, getLoggedInUserInfoOutput, signInUserWithEmailAndPasswordInputModel, signInUserWithEmailAndPasswordOutputModel } from "./model";
 
@@ -44,15 +43,12 @@ export const authRouter = router({
       return {id};
     }),
 
-    getLoggedInUserInfo: publicProcedure
+    getLoggedInUserInfo: authenticatedProcedure
     .meta({openapi: {method: "GET", path: getPath("/getLoggedInUserInfo"), tags: TAGS} })
     .input(getLoggedInUserInfoInput)
     .output(getLoggedInUserInfoOutput)
     .query(async ({ctx}) => {
-      const userToken = getAuthenticationCookie(ctx);
-      if(!userToken) throw new Error("User is not logged in!")
-
-      const {id, email, fullName, profileImageURL} = await userService.verifyAndDecodeUserToken(userToken)
+      const {id, email, fullName, profileImageURL} = await userService.getUserInfoById(ctx.user?.id);
 
       return {
         id,

@@ -9,7 +9,7 @@ import {
   pgEnum,
   unique,
 } from "drizzle-orm/pg-core";
-import { formsTable, usersTable } from "../schema";
+import { formsTable } from "../schema";
 
 export const fieldTypeEnum = pgEnum("field_type_enum", [
   "text",
@@ -26,29 +26,35 @@ export const fieldTypeEnum = pgEnum("field_type_enum", [
   "file",
 ]);
 
-export const formFieldsTable = pgTable("form_fields", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const formFieldsTable = pgTable(
+  "form_fields",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  label: varchar("label", { length: 100 }).notNull(),
-  labelKey: varchar("label_key", { length: 255 }).notNull(),
+    label: varchar("label", { length: 100 }).notNull(),
+    labelKey: varchar("label_key", { length: 255 }).notNull(),
 
-  description: text("description"),
+    description: text("description"),
 
-  placeholder: text("placeholder"),
+    placeholder: text("placeholder"),
 
-  isRequired: boolean("is_required").default(false).notNull(),
+    isRequired: boolean("is_required").default(false).notNull(),
 
-  index: numeric("index", { scale: 2 }).notNull(),
+    index: numeric("index", { scale: 2 }).notNull(),
 
-  fieldType: fieldTypeEnum("field_type").notNull(),
+    fieldType: fieldTypeEnum("field_type").notNull(),
 
-  formId: uuid("form_id").references(() => formsTable.id, { onDelete: "cascade" }).notNull(),
-  
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
-}, (table) => ({
-  uniqueFormIdAndIndex: unique().on(table.formId, table.index),
-}));
+    formId: uuid("form_id")
+      .references(() => formsTable.id, { onDelete: "cascade" })
+      .notNull(),
 
-export type SelectForm = typeof formsTable.$inferSelect;
-export type InsertForm = typeof formsTable.$inferInsert;
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    uniqueFormIdAndIndex: unique().on(table.formId, table.index),
+  }),
+);
+
+export type SelectFormField = typeof formFieldsTable.$inferSelect;
+export type InsertFormField = typeof formFieldsTable.$inferInsert;
