@@ -251,3 +251,61 @@ export const useGetFormById = (id: string) => {
     status,
   };
 };
+
+export const useSubmitForm = () => {
+  const {
+    mutateAsync: submitFormAsync,
+    mutate: submitForm,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isPending,
+    isSuccess,
+    reset,
+    status,
+  } = trpc.form.submitForm.useMutation();
+
+  return {
+    submitFormAsync,
+    submitForm,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isPending,
+    isSuccess,
+    reset,
+    status,
+  };
+};
+
+export const useGetFormSubmissions = (formId: string) => {
+  const {
+    data: submissions,
+    error,
+    failureCount,
+    isError,
+    isFetched,
+    isFetching,
+    isLoading,
+    isPending,
+    isSuccess,
+    refetch,
+    status,
+  } = trpc.form.getFormSubmissions.useQuery({ formId });
+
+  return {
+    submissions,
+    error,
+    failureCount,
+    isError,
+    isFetched,
+    isFetching,
+    isLoading,
+    isPending,
+    isSuccess,
+    refetch,
+    status,
+  };
+};

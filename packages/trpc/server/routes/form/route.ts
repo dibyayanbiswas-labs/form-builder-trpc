@@ -1,4 +1,4 @@
-import { formService } from "../../services";
+import { formService, formSubmissionService } from "../../services";
 import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import {
@@ -9,6 +9,8 @@ import {
   deleteFieldInputModel,
   deleteFieldOutputModel,
   formFieldOutputModel,
+  getFormSubmissionsInputModel,
+  getFormSubmissionsOutputModel,
   getFormByIdInputModel,
   getFormByIdOutputModel,
   getFieldInputModel,
@@ -16,6 +18,8 @@ import {
   listFormsOutputModel,
   listFieldsInputModel,
   listFieldsOutputModel,
+  submitFormInputModel,
+  submitFormOutputModel,
   updateFieldInputModel,
 } from "./model";
 
@@ -163,4 +167,41 @@ export const formRouter = router({
     .input(getFormByIdInputModel)
     .output(getFormByIdOutputModel)
     .query(async ({ input }) => formService.getFormById(input.id)),
+
+  submitForm: publicProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: getPath("/submit"),
+        tags: ["Forms"],
+        protect: false,
+      },
+    })
+    .input(submitFormInputModel)
+    .output(submitFormOutputModel)
+    .mutation(async ({ input }) => formSubmissionService.submitForm(input)),
+
+  getFormSubmissions: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/{formId}/submissions"),
+        tags: ["Forms"],
+        protect: true,
+      },
+    })
+    .input(getFormSubmissionsInputModel)
+    .output(getFormSubmissionsOutputModel)
+    .query(async ({ input, ctx }) => {
+      const submissions = await formSubmissionService.getSubmissionsByFormId(
+        input.formId,
+        ctx.user.id,
+      );
+
+      return submissions.map((submission) => ({
+        ...submission,
+        createdAt: submission.createdAt?.toISOString() ?? null,
+        updatedAt: submission.updatedAt?.toISOString() ?? null,
+      }));
+    }),
 });

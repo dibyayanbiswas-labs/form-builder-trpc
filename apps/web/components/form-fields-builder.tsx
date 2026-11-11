@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { IconPencil, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 
 import { CreateFieldDialog, EditFieldDialog } from "~/components/field-editor-dialog";
 import { Button } from "~/components/ui/button";
@@ -19,7 +20,18 @@ export function FormFieldsBuilder({ formId }: { formId: string }) {
           <h2 className="text-2xl font-semibold">Form fields</h2>
           <p className="text-muted-foreground">Add and configure the fields in this form.</p>
         </div>
-        <CreateFieldDialog formId={formId} />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/forms/${formId}/preview`}>
+              <IconEye />
+              Preview
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/forms/${formId}/submissions`}>View submissions</Link>
+          </Button>
+          <CreateFieldDialog formId={formId} />
+        </div>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading fields...</p>}

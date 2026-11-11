@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { IconPencil } from "@tabler/icons-react";
+import { IconClipboardList, IconEye, IconPencil } from "@tabler/icons-react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -41,7 +41,7 @@ export function FormsTable() {
           <TableHead>Description</TableHead>
           <TableHead>Created</TableHead>
           <TableHead>Last updated</TableHead>
-          <TableHead className="w-12">
+          <TableHead className="w-36">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
@@ -61,8 +61,24 @@ export function FormsTable() {
             </TableCell>
             <TableCell>
               <Button variant="ghost" size="icon" asChild>
+                <Link
+                  href={`/dashboard/forms/${form.id}/preview`}
+                  aria-label={`Preview ${form.title}`}
+                >
+                  <IconEye />
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon" asChild>
                 <Link href={`/dashboard/forms/${form.id}`} aria-label={`Edit ${form.title}`}>
                   <IconPencil />
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon" asChild>
+                <Link
+                  href={`/dashboard/forms/${form.id}/submissions`}
+                  aria-label={`View submissions for ${form.title}`}
+                >
+                  <IconClipboardList />
                 </Link>
               </Button>
             </TableCell>

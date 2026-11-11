@@ -120,3 +120,43 @@ export const getFormByIdOutputModel = z
       .describe("Fields in the form, ordered by their sort index"),
   })
   .describe("Publicly shareable form with its fields");
+
+export const submitFormInputModel = z
+  .object({
+    formId: z.string().uuid().describe("ID of the form being submitted"),
+    values: z
+      .array(
+        z.object({
+          formFieldId: z.string().uuid().describe("ID of the submitted form field"),
+          value: z.string().describe("Submitted value for the field"),
+        }),
+      )
+      .describe("Submitted values keyed by form field ID"),
+  })
+  .describe("Input for submitting a public form");
+
+export const submitFormOutputModel = z.object({
+  id: z.string().uuid().describe("ID of the created submission"),
+});
+
+export const getFormSubmissionsInputModel = z.object({
+  formId: z.string().uuid().describe("ID of the form whose submissions to retrieve"),
+});
+
+export const getFormSubmissionsOutputModel = z.array(
+  z.object({
+    id: z.string().uuid().describe("ID of the submission"),
+    formId: z.string().uuid().nullable().describe("ID of the submitted form"),
+    values: z
+      .array(
+        z.object({
+          formFieldId: z.string().uuid().describe("ID of the submitted field"),
+          value: z.string().describe("Submitted value"),
+        }),
+      )
+      .nullable()
+      .describe("Submitted values"),
+    createdAt: z.string().nullable().describe("Timestamp when the submission was created"),
+    updatedAt: z.string().nullable().describe("Timestamp when the submission was last updated"),
+  }),
+);
