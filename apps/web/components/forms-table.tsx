@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { IconPencil } from "@tabler/icons-react";
 
+import { Button } from "~/components/ui/button";
 import {
   Table,
   TableBody,
@@ -39,15 +41,16 @@ export function FormsTable() {
           <TableHead>Description</TableHead>
           <TableHead>Created</TableHead>
           <TableHead>Last updated</TableHead>
+          <TableHead className="w-12">
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {forms.map((form) => (
           <TableRow key={form.id}>
             <TableCell>
-              <Link href={`/dashboard/forms/${form.id}`} className="font-medium hover:underline">
-                {form.title}
-              </Link>
+              <span className="font-medium">{form.title}</span>
             </TableCell>
             <TableCell className="max-w-sm truncate">{form.description || "—"}</TableCell>
             <TableCell>
@@ -55,6 +58,13 @@ export function FormsTable() {
             </TableCell>
             <TableCell>
               {form.updatedAt ? new Date(form.updatedAt).toLocaleDateString() : "—"}
+            </TableCell>
+            <TableCell>
+              <Button variant="ghost" size="icon" asChild>
+                <Link href={`/dashboard/forms/${form.id}`} aria-label={`Edit ${form.title}`}>
+                  <IconPencil />
+                </Link>
+              </Button>
             </TableCell>
           </TableRow>
         ))}
