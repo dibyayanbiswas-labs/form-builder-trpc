@@ -1,5 +1,6 @@
 import { SiteHeader } from "~/components/site-header";
 import { CreateFormDialog } from "~/components/create-form-dialog";
+import { FormsTable } from "~/components/forms-table";
 
 export default function FormsPage() {
   return (
@@ -13,6 +14,7 @@ export default function FormsPage() {
           </div>
           <CreateFormDialog />
         </div>
+        <FormsTable />
       </div>
     </>
   );

@@ -16,7 +16,7 @@ export const listFormsOutputModel = z.array(
     id: z.string().uuid().describe("ID of the form"),
     title: z.string().describe("Title of the form"),
     description: z.string().nullable().describe("Description of the form"),
-    createdAt: z.date().nullable().describe("Timestamp when the form was created"),
-    updatedAt: z.date().nullable().describe("Timestamp when the form was last updated"),
+    createdAt: z.string().nullable().describe("Timestamp when the form was created"),
+    updatedAt: z.string().nullable().describe("Timestamp when the form was last updated"),
   }),
 );

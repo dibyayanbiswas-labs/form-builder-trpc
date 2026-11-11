@@ -32,3 +32,33 @@ export const useCreateForm = () => {
     reset,
   };
 };
+
+export const useListForms = () => {
+  const {
+    data: forms,
+    error,
+    failureCount,
+    isError,
+    isFetched,
+    isFetching,
+    isLoading,
+    isPending,
+    isSuccess,
+    refetch,
+    status,
+  } = trpc.form.listForms.useQuery();
+
+  return {
+    forms,
+    error,
+    failureCount,
+    isError,
+    isFetched,
+    isFetching,
+    isLoading,
+    isPending,
+    isSuccess,
+    refetch,
+    status,
+  };
+};

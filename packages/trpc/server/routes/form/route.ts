@@ -11,7 +11,6 @@ import {
 const getPath = generatePath("/forms");
 
 export const formRouter = router({
-
   createForm: authenticatedProcedure
     .meta({
       openapi: {
@@ -35,8 +34,7 @@ export const formRouter = router({
       return { id };
     }),
 
-
-    listForms: authenticatedProcedure
+  listForms: authenticatedProcedure
     .meta({
       openapi: {
         method: "GET",
@@ -48,7 +46,11 @@ export const formRouter = router({
     .input(listFormsInputModel)
     .output(listFormsOutputModel)
     .query(async ({ ctx }) => {
-        const forms = await formService.listFormsByUserId(ctx.user.id); 
-        return forms;
+      const forms = await formService.listFormsByUserId(ctx.user.id);
+      return forms.map((form) => ({
+        ...form,
+        createdAt: form.createdAt?.toISOString() ?? null,
+        updatedAt: form.updatedAt?.toISOString() ?? null,
+      }));
     }),
 });
