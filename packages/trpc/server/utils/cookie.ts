@@ -28,7 +28,7 @@ export function createCookieFactory(res: Response) {
 
 export function getCookieFactory(req: Request) {
     return function getCookie(name: string) {
-        return req.cookies?.name
+        return req.cookies?.[name]
     }
 }
 
@@ -46,7 +46,7 @@ export function setAuthenticationCookie(ctx: TRPCContext, accessToken: string) {
 };
 
 export function getAuthenticationCookie(ctx: TRPCContext) {
-    ctx.getCookie(AUTHENTICATION_COOKIE_NAME)
+    return ctx.getCookie(AUTHENTICATION_COOKIE_NAME)
 }
 
 export function clearAuthenticationCookie(ctx: TRPCContext) {

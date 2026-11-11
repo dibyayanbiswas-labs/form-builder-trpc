@@ -5,7 +5,8 @@ import * as JWT from "jsonwebtoken";
 
 import { env } from "../env";
 import { googleOAuth2Client } from "../clients/google-oauth";
-import { createUserWithEmailAndPasswordInputSchema, CreateUserWithEmailAndPasswordInputSchemaType, generateUserTokenPayload, GenerateUserTokenPayloadType } from "./model";
+import { createUserWithEmailAndPasswordInputSchema, CreateUserWithEmailAndPasswordInputSchemaType, generateUserTokenPayload, GenerateUserTokenPayloadType, signInUserWithEmailAndPasswordInputSchema, signInUserWithEmailAndPasswordInputSchemaType } from "./model";
+import { email } from "zod";
 
 // class UserService {
 //   public async getAuthenticationMethods(): Promise<
@@ -37,6 +38,29 @@ class UserService {
     const user = await db.select().from(usersTable).where(eq(usersTable.email, email));
     if(!user || user.length === 0) return null; 
     return user[0];
+  }
+
+  private async verifyUserToken(token: string): Promise<GenerateUserTokenPayloadType> {
+    try {
+      const verificationResult = JWT.verify(token, env.JWT_SECRET) as GenerateUserTokenPayloadType;
+      return verificationResult;
+    } catch (error) {
+      throw new Error("Invalid token")
+    }
+    
+  }
+
+  private async getUserInfoById(id: string) {
+    const user = await db.select({
+      id: usersTable.id,
+      email: usersTable.email,
+      fullName: usersTable.fullName,
+      profileImageURL: usersTable.profileImageUrl
+    }).from(usersTable).where(eq(usersTable.id, id ));
+
+    if(!user || user.length === 0) throw new Error(`User with id ${id} does not exists`);
+
+    return user[0]!;
   }
 
   public async generateUserToken(payload: GenerateUserTokenPayloadType) {
@@ -75,6 +99,42 @@ class UserService {
       token
     }
   }
+
+  public async signInUserWithEmailAndPassword(payload: signInUserWithEmailAndPasswordInputSchemaType) {
+    const {email, password} = await signInUserWithEmailAndPasswordInputSchema.parseAsync(payload);
+
+    const existingUser = await this.getUserByEmail(email);
+
+    if(!existingUser) {
+      throw new Error(`User with email ${email} dose not exists`)
+    }
+
+    if(!existingUser.password || !existingUser.salt) {
+      throw new Error("Invalid Authentication Method")
+    }
+
+    const hashedPassword = createHmac("sha256", existingUser.salt).update(password).digest("hex");
+    
+    if(hashedPassword !== existingUser.password) throw new Error(`Invalid email address or password`);
+
+    const {token} = await this.generateUserToken({id: existingUser.id}) 
+
+    return {
+      id: existingUser.id,
+      token
+    }
+
+
+  }
+
+  public async verifyAndDecodeUserToken(token: string) {
+    const {id} = await this.verifyUserToken(token);
+    const userInfo = await this.getUserInfoById(id);
+
+    return {...userInfo};
+  }
 }
+
+
 
 export default UserService;
